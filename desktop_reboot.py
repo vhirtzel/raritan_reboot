@@ -31,9 +31,12 @@ rack3back = '10.108.45.166'
 rack4front = '10.108.45.167'
 rack4back = '10.108.45.168'
 
+hosts = [rack1front, rack1back, rack2front, rack2back, rack3front, rack3back, rack4front, rack4back]
+
 '''Then I created a dictionary where the keys are the IPs of the machines 
 and the values are a list containing which PDU they are plugged in to and the number of the outlet it is plugged in to.
 '''
+# desktopPDU = collect_outlets(hosts)
 desktopPDU = {
     '65.74.185.2': [rack1front, '47'],
     '65.74.185.3': [rack1front, '46'],
@@ -389,5 +392,18 @@ def powercycle(host, list):
     outlets = pdu.getOutlets()
     for outlet in list:
         outlets[int(outlet)+1].cyclePowerState()
+
+# def collect_outlets(hosts):
+#     current_outlets = {}
+#     for host in hosts:
+#         agent = raritan.rpc.Agent("https", host, user, passwd, disable_certificate_verification = True)
+#         pdu = pdumodel.Pdu("model/pdu/0", agent)
+#         outlets = pdu.getOutlets()
+#         for outlet in outlets:
+#             name = outlet.getSettings().name
+#             if len(name) > 0:
+#                 current_outlets[name] = [host, outlet.getMetaData().label]
+    
+#     return current_outlets
 
 main()
