@@ -1,6 +1,7 @@
 import re
 import sys
 import os
+import configparser
 '''
 In order to use the latest Raritan SDK API bindings I've included it in this repo and the following code will add it to the path so it can be imported.
 '''
@@ -9,30 +10,7 @@ sys.path.append(api_path)
 import raritan.rpc
 from raritan.rpc import pdumodel
 '''
-I've defined a few variables and dictionaries here at the top that model which PDUs and which Outlets in each PDU the Desktop Machines are plugged in to.
-First the IP addresses of the PDUs are stored in variables as I access them a few times in the program.
-'''
-user = ''
-passwd = ''
-credentials = open('credential.conf')
-for line in credentials:
-    lst = []
-    lst = line.split()
-    if lst[0] == 'user':
-        user = lst[2]
-    if lst[0] == 'passwd':
-        passwd = lst[2]
-rack1front = '10.108.45.161'
-rack1back = '10.108.45.162'
-rack2front = '10.108.45.163'
-rack2back = '10.108.45.164'
-rack3front = '10.108.45.165'
-rack3back = '10.108.45.166'
-rack4front = '10.108.45.167'
-rack4back = '10.108.45.168'
-
-'''
-Finally this is a basic regex pattern that will match any of the Desktop Machines in our DC because they are the only machines on these IP ranges.
+This is a basic regex pattern that will match any of the Desktop Machines in our DC because they are the only machines on these IP ranges.
 This doesn't address invalid final octets but that is handled in the while loop of the main function.
 '''
 valid_ip = re.compile(r'65.74.(185|147).(\d*)')
@@ -43,17 +21,11 @@ The main function uses a while loop to ask the user to enter the IP addresses of
 def main():
     print("Enter IP addresses of machines needing to be rebooted.") # Print out instructions for the user
     print("Type DONE when finished.") 
-    ip_lst = []                                                     # Define an empty list to store the IPs
-    hosts = [
-        rack1front, 
-        rack1back, 
-        rack2front, 
-        rack2back, 
-        rack3front,
-        rack3back,
-        rack4front,
-        rack4back,
-        ]
+    ip_lst = []
+    config = parseConfig()
+    user = getUser(config)
+    passwd = getPass(config)                                                     # Define an empty list to store the IPs
+    hosts = getHosts(config)
     while True:                                                     
         entry = input("")                                           # Collect a line of input from the user (this can be a copy pasted group of IPs if each IP is on a new line)
         mo = re.search(valid_ip, entry)                             # Using the regex defined above, search the user input for an IP pattern
@@ -71,9 +43,28 @@ def main():
         else:
             print("Invalid entry, please enter an IP or type DONE") 
 
-    powercycle(hosts, ip_lst)
+    powercycle(user, passwd, hosts, ip_lst)
 
-def powercycle(hosts, ips):
+def parseConfig():
+    config = configparser.ConfigParser()
+    config.read('configfile.ini')
+    return config
+
+def getUser(config):
+    user = config['Credentials']['user']
+    return user
+
+def getPass(config):
+    passwd = config['Credentials']['passwd']
+    return passwd
+
+def getHosts(config):
+    hosts = []
+    for key in config['Hosts']:
+        hosts.append(config['Hosts'][key])
+    return hosts
+
+def powercycle(user, passwd, hosts, ips):
     for host in hosts:
         if len(ips) == 0:
             print('All machines rebooted successfully')
