@@ -2,6 +2,7 @@
 Python script to reboot Desktop Minis using the Raritan API
 
 ## How to use this tool:
+0) Update your Raritan PDU labels for all of your outlets with the IPv4 addresses of the minis plugged in.
 1) Clone this respository
 2) In the root directory create a file called `configfile.ini` that follows the format outlined below.
 3) Navigate to the root directory in the terminal and run `python3 desktop_reboot.py`
@@ -31,3 +32,4 @@ So I've bundled the Python API bindings with this repo to give a batteries inclu
 ## To Do:
 * Improve the user feedback and error handling. 
 * Find a way to automate the creation of the dictionary for future machine additions. ✅
+* Find a way to make the IP check regex to be DC agnostic
