@@ -24,7 +24,7 @@ def main():
     ip_lst = []
     config = parseConfig()
     user = getUser(config)
-    passwd = getPass(config)                                                     # Define an empty list to store the IPs
+    passwd = getPass(config)                                        
     hosts = getHosts(config)
     while True:                                                     
         entry = input("")                                           # Collect a line of input from the user (this can be a copy pasted group of IPs if each IP is on a new line)
