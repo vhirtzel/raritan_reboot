@@ -21,6 +21,15 @@ rack1front = '(ip address for your rack1front pdu)
 rack1back = '(ip address for your rack1back pdu)'
 ```
 
+## What is happening:
+First the script gathers the IPs that need to be rebooted from the user. I've implemented strict checking using regex because we label our PDU using the IPv4 address of the minis, however all the Raritan PDU is looking for in the `powercycle` function is for the label of the outlet to match the user input.  
+
+Next the script checks if the user didn't enter any IPs and quits if this is true. If not it connects to each individual PDU one at a time using the `Agent` class and uses the `Pdu` class and the `getOutlets()` and `getSettings().name` methods to determine the name of each outlet.  
+
+Then it checks that name against the list of names provided by the user. If it finds a match it uses the `cyclePowerState()` method to cycle that outlet rebooting the Mini.  
+
+Finally the script removes that IP entry from the list of requested reboots and checks to see if that was the last entry. If not it continues to the next PDU.  
+
 ## Raritan JSON-RPC API
 Raritan provides an SDK that can be found [here.](https://www.raritan.com/support/product/px3)  
 Documentation is included in the SDK and can also be found [here.](https://help.raritan.com/json-rpc/pdu/v3.6.1/)

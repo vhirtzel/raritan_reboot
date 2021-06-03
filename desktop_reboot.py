@@ -81,6 +81,9 @@ def powercycle(user, passwd, hosts, ips):
                 print(f'Rebooting {name}')
                 outlet.cyclePowerState()
                 ips.remove(name)
+                if len(ips) == 0:
+                    print('All machines rebooted successfully')
+                    exit()
 
 
 main()
