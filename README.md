@@ -4,12 +4,15 @@ Python script to reboot Desktop Minis using the Raritan API
 ## How to use this tool:
 0) Update your Raritan PDU labels for all of your outlets with the IPv4 addresses of the minis plugged in.
 1) Clone this respository
-2) In the root directory create a file called `configfile.ini` that follows the format outlined below.
-3) Navigate to the root directory in the terminal and run `python3 desktop_reboot.py`
-4) Follow the prompts to reboot the desired Minis.
+2) Create a virtual environment `python3 -m venv .venv`
+3) Enter the environment: `source .venv/bin/activate`
+4) Install the requirements `pip install -r requirements.txt` 
+5) In the root directory create a file called `configfile.ini` that follows the format outlined below.
+6) Navigate to the root directory in the terminal and run `python3 desktop_reboot.py`
+7) Follow the prompts to reboot the desired Minis.
 
 ## Requirements
-* python3
+* Python >= 3.9
 * configfile.ini that has the following format:
 ```
 [Credentials]
