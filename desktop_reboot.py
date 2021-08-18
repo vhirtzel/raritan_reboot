@@ -1,4 +1,3 @@
-import re
 import configparser
 
 from rich.console import Console
@@ -42,10 +41,6 @@ status_table = Table(expand=True)
 status_table.add_column("Status")
 layout["status"].update(Layout(status_table))
 
-# Regex to capture valid machine IPs
-valid_ip = re.compile(r"65.74.(185|147).(\d*)")
-
-
 def main():
     console.print(layout)
     ip_lst = []
@@ -63,22 +58,13 @@ def main():
     console.print(layout)
     while True:
         entry = Prompt.ask("Type DONE when finished")
-        mo = re.search(valid_ip, entry)
         if entry == "DONE":
             break
-        elif mo is not None:
-            last_octete = mo.groups()[1]
-            last_octet_int = int(last_octete)
-            if (mo.groups()[0] == "185") and last_octet_int < 255:
-                ip_lst.append(entry)
-                ip_table.add_row(entry)
-            elif (mo.groups()[0] == "147") and last_octet_int < 40:
-                ip_lst.append(entry)
-                ip_table.add_row(entry)
-            else:
-                print("Invalid entry, please enter an IP or type DONE")
-        else:
-            print("Invalid entry, please enter an IP or type DONE")
+        check_entry = check_valid_ip(config, entry)
+        if check_entry == True:
+            ip_lst.append(entry)
+            ip_table.add_row(entry)
+
     with Live(layout, refresh_per_second=4):
         powercycle(user, passwd, hosts, ip_lst)
 
@@ -108,6 +94,23 @@ def getHosts(config):
         hosts.append(config["Hosts"][key])
     status_table.add_row("Getting Raritan PDU IPs... ✅")
     return hosts
+
+def check_valid_ip(config, entry):
+    entry_lst = entry.split(".")
+    for ip_range in config["IP Ranges"]:
+        range_str = config["IP Ranges"][ip_range]
+        lst = range_str.split(".")
+        if entry_lst[:3] != lst[:3]:
+            continue
+        range_lst = lst[3].split(":")
+        if int(entry_lst[3]) in range(int(range_lst[0]),int(range_lst[1])+1):
+            return True
+    
+    print(f"IP Address not found in range {range_str}")
+    print("Please enter a valid IP or type DONE")
+    return False
+
+        
 
 
 def powercycle(user, passwd, hosts, ips):

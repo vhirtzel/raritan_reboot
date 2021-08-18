@@ -20,12 +20,15 @@ user = '(your Raritan PDU username here)'
 passwd = '(your Raritan PDU password here)'
 
 [Hosts]
-rack1front = '(ip address for your rack1front pdu)
+rack1front = '(ip address for your rack1front pdu)'
 rack1back = '(ip address for your rack1back pdu)'
+
+[IP Ranges]
+range1 = '(ip address range in the following format: 1.1.1.1:254')
 ```
 
 ## What is happening:
-First the script gathers the IPs that need to be rebooted from the user. I've implemented strict checking using regex because we label our PDU using the IPv4 address of the minis, however all the Raritan PDU is looking for in the `powercycle` function is for the label of the outlet to match the user input.  
+First the script gathers the IPs that need to be rebooted from the user. I've implemented checking the IP provided using the ranges provided in the `configfile.ini` file. Because we label our PDU using the IPv4 address of the minis it is looking for an IPv4 address pattern, however all the Raritan PDU is looking for in the `powercycle` function is for the label of the outlet to match the user input so this could be adjusted if you label your PDU outlets differently.  
 
 Next the script checks if the user didn't enter any IPs and quits if this is true. If not it connects to each individual PDU one at a time using the `Agent` class and uses the `Pdu` class and the `getOutlets()` and `getSettings().name` methods to determine the name of each outlet.  
 
