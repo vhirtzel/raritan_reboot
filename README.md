@@ -30,11 +30,11 @@ range1 = '(ip address range in the following format: 1.1.1.1:254')
 ## What is happening:
 First the script gathers the IPs that need to be rebooted from the user. I've implemented checking the IP provided using the ranges provided in the `configfile.ini` file. Because we label our PDU using the IPv4 address of the minis it is looking for an IPv4 address pattern, however all the Raritan PDU is looking for in the `powercycle` function is for the label of the outlet to match the user input so this could be adjusted if you label your PDU outlets differently.  
 
-Next the script checks if the user didn't enter any IPs and quits if this is true. If not it connects to each individual PDU one at a time using the `Agent` class and uses the `Pdu` class and the `getOutlets()` and `getSettings().name` methods to determine the name of each outlet.  
+Next the script opens a thread for each PDU in the `configfile.ini` file running the `powercycle` function as its target. This connects to each PDU all at once using the `Agent` class and uses the `Pdu` class and the `getOutlets()` and `getSettings().name` methods to determine the name of each outlet.  
 
-Then it checks that name against the list of names provided by the user. If it finds a match it uses the `cyclePowerState()` method to cycle that outlet rebooting the Mini.  
+Then it checks that name against the list of names provided by the user. If it finds a match it locks the other threads using a global Rlock and uses the `cyclePowerState()` method to cycle that outlet rebooting the Mini. Then the script removes that IP entry from the list of requested reboots and unlocks the threads. 
 
-Finally the script removes that IP entry from the list of requested reboots and checks to see if that was the last entry. If not it continues to the next PDU.  
+Finally the script checks to see if that was the last entry. If it is it quits the program.
 
 ## Raritan JSON-RPC API
 Raritan provides an SDK that can be found [here.](https://www.raritan.com/support/product/px3)  
@@ -47,4 +47,5 @@ So I've bundled the Python API bindings with this repo to give a batteries inclu
 ## To Do:
 * Improve the user feedback and error handling. 
 * Find a way to automate the creation of the dictionary for future machine additions. ✅
-* Find a way to make the IP check regex to be DC agnostic
+* Find a way to make the IP check regex to be DC agnostic ✅
+* Find a way to parralelize the Raritan API calls ✅

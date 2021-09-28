@@ -1,4 +1,5 @@
 import configparser
+import threading
 
 from rich.console import Console
 from rich.live import Live
@@ -41,6 +42,7 @@ status_table = Table(expand=True)
 status_table.add_column("Status")
 layout["status"].update(Layout(status_table))
 
+
 def main():
     console.print(layout)
     ip_lst = []
@@ -49,24 +51,26 @@ def main():
     passwd = getPass(config)
     hosts = getHosts(config)
     layout["user_prompts"].update(
-        Layout(
-            Panel(
-                "Enter IP addresses of machines needing to be rebooted"
-            )
-        )
+        Layout(Panel("Enter IP addresses of machines needing to be rebooted. Type DONE when finished"))
     )
     console.print(layout)
     while True:
-        entry = Prompt.ask("Type DONE when finished")
+        entry = Prompt.ask()
         if entry == "DONE":
             break
-        check_entry = check_valid_ip(config, entry)
-        if check_entry == True:
+        #check_entry = check_valid_ip(config, entry)
+        check_entry = True
+        if check_entry is True:
             ip_lst.append(entry)
             ip_table.add_row(entry)
-
+    layout["user_prompts"].update(Layout(Panel(str(ip_lst))))
     with Live(layout, refresh_per_second=4):
-        powercycle(user, passwd, hosts, ip_lst)
+        jobs = []
+        for host in hosts:
+            jobs.append(threading.Thread(target=powercycle, args=(user, passwd, host, ip_lst), daemon=True))
+
+        [j.start() for j in jobs]
+        [j.join() for j in jobs]
 
 
 def parseConfig():
@@ -95,6 +99,7 @@ def getHosts(config):
     status_table.add_row("Getting Raritan PDU IPs... ✅")
     return hosts
 
+
 def check_valid_ip(config, entry):
     entry_lst = entry.split(".")
     for ip_range in config["IP Ranges"]:
@@ -103,40 +108,37 @@ def check_valid_ip(config, entry):
         if entry_lst[:3] != lst[:3]:
             continue
         range_lst = lst[3].split(":")
-        if int(entry_lst[3]) in range(int(range_lst[0]),int(range_lst[1])+1):
+        if int(entry_lst[3]) in range(int(range_lst[0]), int(range_lst[1]) + 1):
             return True
-    
+
     print(f"IP Address not found in range {range_str}")
     print("Please enter a valid IP or type DONE")
     return False
 
-        
+
+reboot_lock = threading.RLock()
 
 
-def powercycle(user, passwd, hosts, ips):
-    for host in hosts:
-        if len(ips) == 0:
-            layout["user_prompts"].update(
-                Layout(Panel("All machines rebooted successfully!"))
-            )
-            exit()
-        status_table.add_row(f"Connecting to {host}...")
-        agent = raritan.rpc.Agent(
-            "https", host, user, passwd, disable_certificate_verification=True
-        )
-        pdu = pdumodel.Pdu("model/pdu/0", agent)
-        status_table.add_row("Collecting outlet data...")
-        outlets = pdu.getOutlets()
-        status_table.add_row("Checking outlet data against list of IPs")
-        for outlet in outlets:
-            name = outlet.getSettings().name
-            if name in ips:
+def powercycle(user, passwd, host, ips):
+    status_table.add_row(f"Connecting to {host}...")
+    agent = raritan.rpc.Agent(
+        "https", host, user, passwd, disable_certificate_verification=True
+    )
+    pdu = pdumodel.Pdu("model/pdu/0", agent)
+    status_table.add_row(f"Collecting outlet data for {host}...")
+    outlets = pdu.getOutlets()
+    status_table.add_row(f"Checking outlet data for {host} against list of IPs")
+    for outlet in outlets:
+        name = outlet.getSettings().name
+        if name in ips:
+            with reboot_lock:
                 status_table.add_row(f"Rebooting {name}")
                 outlet.cyclePowerState()
                 ips.remove(name)
-                if len(ips) == 0:
-                    status_table.add_row("All machines rebooted successfully")
-                    exit()
+                layout["user_prompts"].update(Layout(Panel(str(ips))))
+        if len(ips) == 0:
+            layout["user_prompts"].update(Layout(Panel("Done")))
+            exit()
 
 
 if __name__ == "__main__":
