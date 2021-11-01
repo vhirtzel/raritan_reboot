@@ -1,5 +1,5 @@
-# desktop_reboot
-Python script to reboot Desktop Minis using the Raritan API
+# raritan_reboot
+Python script to power cycle Outlets asyncronously using multithreading, the Raritan API, and Rich as a TUI:
 
 ## How to use this tool:
 0) Update your Raritan PDU labels for all of your outlets with the IPv4 addresses of the minis plugged in.
