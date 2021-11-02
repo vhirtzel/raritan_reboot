@@ -2,7 +2,7 @@
 Python script to power cycle Outlets asyncronously using multithreading, the Raritan API, and Rich as a TUI:
 
 ## How to use this tool:
-0) Update your Raritan PDU labels for all of your outlets with the IPv4 addresses of the minis plugged in.
+0) Update your Raritan PDU labels for all of your outlets with the IPv4 addresses of the machines plugged in.
 1) Clone this respository
 2) Create a virtual environment `python3 -m venv .venv`
 3) Enter the environment: `source .venv/bin/activate`
